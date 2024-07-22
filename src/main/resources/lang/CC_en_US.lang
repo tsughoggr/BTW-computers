@@ -1,0 +1,14 @@
+#COMPUTER NAMES
+tile.CPUBlock.name=CPU
+tile.cableBlock.name=Cable
+tile.keyboard.name=Keyboard
+tile.tapeInscriber.name=Tape Inscriber
+tile.tapeDrive.name=Tape Drive
+tile.redstoneReader.name=Redstone Reader
+tile.redstoneSignal.name=Redstone Signal
+tile.redstoneSignalActive.name=Redstone Signal
+tile.inventoryReader.name=Inventory Reader
+tile.packetFilter.name=Filter
+tile.packetRouter.name=Router
+tile.packetSwitch.name=Switch
+item.ccItemTape.name=Tape Memory

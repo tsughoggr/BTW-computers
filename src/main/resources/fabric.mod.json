@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "tsgcomputers",
+  "version": "${version}",
+
+  "name": "Tsughogger's Computronics",
+  "description": "it carries out and is w",
+  "authors": [
+    "tsughoggr"
+  ],
+  "contact": {
+    "homepage": "https://bonequest.net/@objtype",
+    "sources": "https://github.com/tsughoggr/computers"
+  },
+
+  "license": "Public Domain",
+  "icon": "assets/computers/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "init": [
+      "net.fabricmc.tsughoggr.TSGComputers"
+    ],
+    "preLaunch": [
+      "net.fabricmc.tsughoggr.TSGComputersPrelaunchInitializer"
+    ]
+  },
+  "mixins": [
+    "computers.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.7.4"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}
