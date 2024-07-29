@@ -40,7 +40,6 @@ public class GuiPacketHandler {
 						
 					return true;
 
-
 			}
 		} catch (Exception e){
 			e.printStackTrace();

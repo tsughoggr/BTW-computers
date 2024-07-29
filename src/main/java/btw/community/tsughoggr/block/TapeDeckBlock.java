@@ -6,16 +6,45 @@ public class TapeDeckBlock extends BlockContainer{
 	private BlockModel model;
 	private Icon blocktex;
 	private Icon bottomtex;
-	private Icon disktex;
 
+	private static final short[][] postranstbl = new short[][]{
+		{-1, -1, 12, 12, -1, 13, 13, -1, -1, 14, 14, -1, 15, 15, -1, -1},	//0
+		{-1, -1, 12, 12, -1, 13, 13, -1, -1, 14, 14, -1, 15, 15, -1, -1},	//1
+		{-1, -1, 12, 12, -1, 13, 13, -1, -1, 14, 14, -1, 15, 15, -1, -1},	//2
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},	//3
+		{-1, -1,  8,  8, -1,  9,  9, -1, -1, 10, 10, -1, 11, 11, -1, -1},	//4
+		{-1, -1,  8,  8, -1,  9,  9, -1, -1, 10, 10, -1, 11, 11, -1, -1},	//5
+		{-1, -1,  8,  8, -1,  9,  9, -1, -1, 10, 10, -1, 11, 11, -1, -1},	//6
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},	//7
+		{-1, -1,  4,  4, -1,  5,  5, -1, -1,  6,  6, -1,  7,  7, -1, -1},	//8
+		{-1, -1,  4,  4, -1,  5,  5, -1, -1,  6,  6, -1,  7,  7, -1, -1},	//9
+		{-1, -1,  4,  4, -1,  5,  5, -1, -1,  6,  6, -1,  7,  7, -1, -1},	//10
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},	//11
+		{-1, -1,  0,  0, -1,  1,  1, -1, -1,  2,  2, -1,  3,  3, -1, -1},	//12
+		{-1, -1,  0,  0, -1,  1,  1, -1, -1,  2,  2, -1,  3,  3, -1, -1},	//13
+		{-1, -1,  0,  0, -1,  1,  1, -1, -1,  2,  2, -1,  3,  3, -1, -1},	//14
+		{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}	//15
+	}; 
 	public TapeDeckBlock(int id){
 		super(id, Material.rock);
 		setCreativeTab(CreativeTabs.tabDecorations);
 	}
 	public TileEntity
 	createNewTileEntity(World world){
-		return new TapeDeckTileEntity();
+		TapeDeckTileEntity te = new TapeDeckTileEntity();
+		return te;
 	}
+
+	public static short
+	slotFromPos(float fx, float fy){
+		int x, y;
+		x = (int)Math.round(fx * 15D);
+		y = (int)Math.round(fy * 15D);
+		if(x<0||y<0||x>15||y>15)
+			return -1;
+		return postranstbl[y][x];
+	}
+
 	public void
 	breakBlock(World world, int x, int y, int z, int md, int mod){
 		TapeDeckTileEntity te = (TapeDeckTileEntity)world.getBlockTileEntity(x,y,z);
@@ -30,30 +59,41 @@ public class TapeDeckBlock extends BlockContainer{
 	public boolean
 	onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int face, float fx, float fy, float fz){
 		float fg;
-		if(fx == 1.0F || fx == 0.0F)
+		short slot;
+		if(world.isRemote)
+			return false;
+		if(fx == 1.0F)
+			fg = 1.0F - fz;
+		else if(fx == 0.0F)
 			fg = fz;
-		else
+		else if(fz == 1.0F)
 			fg = fx;
-
+		else
+			fg = 1.0F - fx;
+		
 		int md = world.getBlockMetadata(x,y,z) + 2;
-		if(md != face || world.isRemote)
+		if(md != face || world.isRemote || (slot = slotFromPos(fg, fy)) < 0)
 			return false;
 
 		TapeDeckTileEntity te = (TapeDeckTileEntity)world.getBlockTileEntity(x,y,z);
 		if(te == null)
 			return false;
-		if((int)((1.0F - fy) * 15.0F) > 9 || (int)((1.0F - fy) * 15.0F) < 1 || (int)(fg * 15.0F) > 14 || (int)(fg * 15.0F) < 1)
-			return false;
-		if( te.inventory[(((int)((1.0F - fy) * 15.0F)/5) + 1) * ((int)(fg * 15.0F) / 2)] != null){
-			btw.item.util.ItemUtils.ejectStackWithRandomOffset(world,x,y,z,te.inventory[(((int)((1.0F - fy) * 15.0F)/5) + 1) * ((int)(fg * 15.0F) / 2)]);
-			te.inventory[(((int)((1.0F - fy) * 15.0F)/5) + 1) * ((int)(fg * 15.0F) / 2)] = null;
+
+		if( te.inventory[slot] != null){
+			if(player.getHeldItem() == null)
+				btw.item.util.ItemUtils.givePlayerStackOrEjectFromTowardsFacing(player,te.inventory[slot],x,y,z,face);
+			else
+				btw.item.util.ItemUtils.ejectStackFromBlockTowardsFacing(world, x,y,z, te.inventory[slot],face);
+			te.inventory[slot] = null;
+			te.clearSlot(slot);
 			return true;
 		}
 		else if( player.getHeldItem() != null && player.getHeldItem().itemID == ComputerItems.tape.itemID){
-			te.inventory[(((int)((1.0F - fy) * 15.0F)/5) + 1) * ((int)(fg * 15.0F) / 2)] = player.getHeldItem().splitStack(1);
+			te.inventory[slot] = player.getHeldItem().splitStack(1);
+			te.fillSlot(slot);
 			return true;
 		}
-			
+		
 		return false;
 	}
 	public void
@@ -86,34 +126,31 @@ public class TapeDeckBlock extends BlockContainer{
 	@Override
 	public boolean
 	renderAsNormalBlock() {
-		return true;
+		return false;
 	}
 	@Override
 	public boolean
 	isOpaqueCube(){
-		return true;
+		return false;
 	}
 	@Override
 	public void
 	renderBlockAsItem(RenderBlocks rb, int md, float cd){
 		BlockModel model = new BlockModel();
 		model.addBox(0D,0D, 0D, 1D, 1D, 1D);
-		model.renderAsItemBlock(rb, this, 0);
+		model.renderAsItemBlock(rb, this, 3);
 	}
 	@Override
 	public void
 	registerIcons(IconRegister ir){
 		blocktex = ir.registerIcon("ccBlockTapeDeck_side");
 		bottomtex = ir.registerIcon("ccTapeDriveTape");
-		disktex = ir.registerIcon("ccTapeDriveSpoolFront");
 	}
 	@Override
 	public Icon
 	getIcon( int fac, int md){
 		if(md+2 == fac)
 			return blocktex;
-		if(fac == 0 || fac ==1)
-			return bottomtex;
-		return disktex;
+		return bottomtex;
 	}
 }
